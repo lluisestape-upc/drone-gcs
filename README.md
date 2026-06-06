@@ -92,34 +92,7 @@ The most operationally valuable module. The `barcode_detector.py` node subscribe
 
 ## System Architecture
 
-```
-┌─────────────────────────────── DRONE ──────────────────────────────────┐
-│                                                                         │
-│  ┌──────────────┐   Ethernet    ┌──────────────────────────────────┐   │
-│  │  Unitree 4D  │──────────────▶│                                  │   │
-│  │  LiDAR       │               │          Raspberry Pi 5          │   │
-│  └──────────────┘               │          ROS2 Jazzy              │   │
-│                                 │                                  │   │
-│  ┌──────────────┐   CSI / USB   │  • gcs_control.py  (manager)    │   │
-│  │  Pi Camera   │──────────────▶│  • camera_publisher.py          │   │
-│  └──────────────┘               │  • mjpeg_server.py              │   │
-│                                 │  • barcode_detector.py          │   │
-│  ┌──────────────┐   UART TX/RX  │  • mavlink_bridge.py            │   │
-│  │  Pixhawk FC  │──────────────▶│  • brain_node.py                │   │
-│  │  ArduCopter  │               │  • slam_launch.sh               │   │
-│  └──────────────┘               │    └─ unitree_lidar_ros2        │   │
-│                                 │    └─ Point-LIO                 │   │
-│                                 │  • rosbridge_server  :9090      │   │
-│                                 └──────────────┬───────────────────┘   │
-└────────────────────────────────────────────────│────────────────────────┘
-                                                 │ Wi-Fi  (WebSocket)
-                              ┌──────────────────▼───────────────────┐
-                              │         GCS Laptop                   │
-                              │         Electron App                 │
-                              │  Dashboard · Navigation · SLAM       │
-                              │  Image Processing · Inventory DB     │
-                              └──────────────────────────────────────┘
-```
+![System Architecture](docs/architecture.png)
 
 ---
 
