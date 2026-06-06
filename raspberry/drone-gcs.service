@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# drone-gcs.service — systemd unit: auto-start GCS stack on every boot
+#
+# INSTALL (run once on the Raspberry Pi):
+#
+#   1. Copy to systemd:
+#        sudo cp ~/drone-gcs/raspberry/drone-gcs.service /etc/systemd/system/
+#
+#   2. Reload systemd and enable:
+#        sudo systemctl daemon-reload
+#        sudo systemctl enable drone-gcs
+#
+#   3. Start it now without rebooting:
+#        sudo systemctl start drone-gcs
+#
+# Useful commands:
+#   sudo systemctl status  drone-gcs   → check if running
+#   sudo systemctl stop    drone-gcs   → stop stack
+#   sudo systemctl restart drone-gcs   → restart stack
+#   journalctl -u drone-gcs -f         → follow live logs (systemd journal)
+#   cat ~/gcs_logs/<timestamp>/*.log    → per-process log files
+#
+# Customise what starts:
+#   Edit the ExecStart line below — add/remove flags from start_all.sh.
+#   Examples:
+#     rosbridge + camera only (no SLAM):
+#       ExecStart=/bin/bash %h/drone-gcs/raspberry/start_all.sh --no-slam
+#     with brain node:
+#       ExecStart=/bin/bash %h/drone-gcs/raspberry/start_all.sh --brain
+#     with MAVROS on serial port:
+#       ExecStart=/bin/bash %h/drone-gcs/raspberry/start_all.sh --mavros /dev/ttyAMA0
+# ─────────────────────────────────────────────────────────────────────────────
+
+[Unit]
+Description=Drone GCS stack (rosbridge + camera + SLAM)
+# Start after the network is up and an IP address has been assigned
+After=network-online.target
+Wants=network-online.target
+# If MAVROS needs the serial port, uncomment the next line:
+# After=dev-ttyAMA0.device
+
+[Service]
+# Run as the current user (systemd %i / %h macros expand to home dir)
+User=pi
+Group=pi
+WorkingDirectory=%h/drone-gcs/raspberry
+
+# ── Change this line to customise which components start ──────────────────
+ExecStart=/bin/bash %h/drone-gcs/raspberry/start_all.sh
+# ─────────────────────────────────────────────────────────────────────────
+
+# Restart automatically if it crashes; wait 10 s before retrying
+Restart=on-failure
+RestartSec=10
+
+# Allow up to 60 s for the stack to come up cleanly
+TimeoutStartSec=60
+
+# Give enough time for all child processes to stop on shutdown
+TimeoutStopSec=30
+
+# Environment — override ROS distro here if different from 'jazzy'
+Environment="ROS_DISTRO=jazzy"
+Environment="HOME=/home/pi"
+
+# Required so 'source /opt/ros/jazzy/setup.bash' works inside the script
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=drone-gcs
+
+[Install]
+WantedBy=multi-user.target
